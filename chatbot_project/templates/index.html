@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: antiquewhite;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .chat-container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            width: 400px;
+            display: none;
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            transform-origin: bottom right;
+            animation: slide-up 0.3s ease-in-out forwards;
+        }
+        @keyframes slide-up {
+            0% {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .chat-container.active {
+            display: block;
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .chat-container.inactive {
+            display: none;
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        .toggle-button {
+            position: fixed;
+            width: 50px;
+            height: 50px;
+            bottom: 20px;
+            right: 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+        .toggle-button i {
+            font-size: 20px;
+        }
+        .toggle-button .fas {
+            transition: transform 0.3s ease-in-out;
+        }
+        .toggle-button.active .fas {
+            transform: rotate(90deg);
+        }
+        .toggle-button.active .fa-comments {
+            display: none;
+        }
+        .toggle-button.active .fa-times {
+            display: block;
+        }
+        .toggle-button.active:hover {
+            background-color: #dc3545; 
+        }
+        .toggle-button:hover {
+            background-color: #0056b3;
+            transform: scale(1.1);
+        }
+        .toggle-button .fa-times {
+            display: none;
+        }
+        .chat-container h1 {
+            font-size: 24px;
+            margin-bottom: 16px;
+            color: #007bff;
+        }
+        .chat-box {
+            border: none;
+            background-color: #f9f9f9;
+            padding: 16px;
+            border-radius: 8px;
+            height: 240px;
+            overflow-y: auto;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .chat-box div {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+        }
+        .chat-bubble {
+            padding: 10px;
+            border-radius: 20px;
+            max-width: 80%;
+        }
+        .user-message {
+            justify-content: flex-end;
+            text-align: right;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        .user-message .chat-bubble {
+            background-color: #dcf8c6;
+            margin-left: auto;
+        }
+        .bot-message {
+            justify-content: flex-start;
+            text-align: left;
+            color: #555;
+            display: flex;
+            align-items: center;
+        }
+        .bot-message .chat-bubble {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+        }
+        .input-container {
+            display: flex;
+            align-items: center;
+            margin-top: 12px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px 0 0 8px;
+            font-size: 14px;
+            transition: all 0.3s ease-in-out;
+        }
+        .input-button {
+            width: 40px;
+            height: 40px;
+            background: transparent;
+            color: #007bff;
+            border: none;
+            border-radius: 0 8px 8px 0;
+            font-size: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: color 0.3s ease-in-out, transform 0.1s ease-in-out;
+            visibility: hidden;
+        }
+        .input-button i {
+            font-size: 20px;
+        }
+        .input-button:hover {
+            color: #0056b3;
+            transform: scale(1.1);
+        }
+        .user-info {
+            font-size: 8px; 
+            color: #888;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <button class="toggle-button" onclick="toggleChat()">
+        <i class="fas fa-comments"></i>
+        <i class="fas fa-times"></i>
+    </button>
+    <div class="chat-container inactive" id="chat-container">
+        <h1>Chatbot</h1>
+        <div class="chat-box" id="chat-box"></div>
+        <div class="input-container">
+            <input type="text" id="message" placeholder="Type a message..." oninput="toggleSendButton()" onkeydown="handleKeyPress(event)">
+            <button onclick="sendMessage()" class="input-button" id="send-button"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+    <script>
+        function toggleChat() {
+            const chatContainer = document.getElementById('chat-container');
+            const toggleButton = document.querySelector('.toggle-button');
+            chatContainer.classList.toggle('active');
+            chatContainer.classList.toggle('inactive');
+            toggleButton.classList.toggle('active');
+        }
+
+        function toggleSendButton() {
+            const message = document.getElementById('message').value;
+            const sendButton = document.getElementById('send-button');
+            sendButton.style.visibility = message.trim() ? 'visible' : 'hidden';
+        }
+
+        function sendMessage() {
+            const message = document.getElementById('message').value;
+            if (message.trim() === '') return;
+
+            const chatBox = document.getElementById('chat-box');
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.className = 'user-message';
+            userMessageDiv.innerHTML = `
+                <div class="chat-bubble">${message}</div>
+                <i class="fas fa-user"></i>
+                <span class="user-info">Username</span>`;
+            chatBox.appendChild(userMessageDiv);
+
+            fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'message=' + encodeURIComponent(message),
+            })
+            .then(response => response.json())
+            .then(data => {
+                const botMessageDiv = document.createElement('div');
+                botMessageDiv.className = 'bot-message';
+                botMessageDiv.innerHTML = `
+                    <i class="fas fa-robot"></i>
+                    <div class="chat-bubble">${data.response}</div>`;
+                chatBox.appendChild(botMessageDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+
+            document.getElementById('message').value = '';
+            toggleSendButton();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>
